@@ -46,6 +46,16 @@ def f_k(block, subkey):
 
     return xor(block[:4], p4_result) + block[4:]
 
+def split_into_blocks(data, block_size=8):
+    return [data[i:i+block_size] for i in range(0, len(data), block_size)]
+
+def encrypt_decrypt_blocks(blocks, keys, encrypt=True):
+    result_blocks = []
+    for block in blocks:
+        if len(block) < 8:
+            block = block.ljust(8, '0')  # Padding if necessary
+        result_blocks.append(s_des_encrypt_decrypt(block, keys, encrypt))
+    return result_blocks
 
 def s_des_encrypt_decrypt(plaintext, keys, encrypt=True):
     IP = [1, 5, 2, 0, 3, 7, 4, 6]
@@ -80,28 +90,21 @@ def key_generation(key):
 random_key = generate_random_key()
 print(f"Random Key: {random_key}")
 
-
-start_key_gen = timeit.default_timer()
 key1, key2 = key_generation(random_key)
-key_gen_time = timeit.default_timer() - start_key_gen
-print(f"Key Generation Time: {key_gen_time:.8f} seconds")
 
-
-plaintext = input("Enter 8-bit plaintext (e.g., 10101010): ")
-if len(plaintext) != 8:
-    raise ValueError("Plaintext must be 8 bits long.")
-
+plaintext = input("Enter plaintext (in bits): ")
+plaintext_blocks = split_into_blocks(plaintext)
 
 start_encryption = timeit.default_timer()
-ciphertext = s_des_encrypt_decrypt(plaintext, [key1, key2], True)
+encrypted_blocks = encrypt_decrypt_blocks(plaintext_blocks, [key1, key2], True)
 encryption_time = timeit.default_timer() - start_encryption
+ciphertext = ''.join(encrypted_blocks)
 print(f"Encrypted: {ciphertext}")
 print(f"Encryption Time: {encryption_time:.8f} seconds")
 
-
 start_decryption = timeit.default_timer()
-decrypted_text = s_des_encrypt_decrypt(ciphertext, [key1, key2], False)
+decrypted_blocks = encrypt_decrypt_blocks(encrypted_blocks, [key1, key2], False)
 decryption_time = timeit.default_timer() - start_decryption
+decrypted_text = ''.join(decrypted_blocks)
 print(f"Decrypted: {decrypted_text}")
 print(f"Decryption Time: {decryption_time:.8f} seconds")
-
