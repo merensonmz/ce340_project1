@@ -44,7 +44,7 @@ def generate_rsa_keys():
     n = p * q
     phi = (p-1) * (q-1)
     
-    e = 3
+    e = 65537
     while gcd(e, phi) != 1:
         e += 2
 
@@ -53,7 +53,7 @@ def generate_rsa_keys():
 
 def rsa_encrypt(message, pub_key):
     e, n = pub_key
-    cipher = pow(int(message, 2), e, n)  # we convert the binary message to integer before encryption 
+    cipher = pow(int(message, 2), e, n)  # we convert the binary message to integer before encryption  # x^e mod e
     return cipher
 
 def rsa_decrypt(ciphertext, priv_key):
@@ -82,8 +82,8 @@ def xor(bits1, bits2):
 
 
 def sbox_lookup(bits, sbox):
-    row = int(bits[0] + bits[3], 2)
-    col = int(bits[1] + bits[2], 2)
+    row = int(bits[0] + bits[3], 2)  #first an fourth
+    col = int(bits[1] + bits[2], 2)  # second and third
     return format(sbox[row][col], '02b')
 
 
@@ -93,18 +93,22 @@ def f_k(block, subkey):
     S1 = [[0, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
     P4 = [1, 3, 2, 0]
 
-    expanded_half = permute(block[4:], EP)
+    expanded_half = permute(block[4:], EP)  #right side of block expanded EP
     xor_result = xor(expanded_half, subkey)
 
+# xor divided 2 parts
     left_half = xor_result[:4]
     right_half = xor_result[4:]
 
-    left_sbox = sbox_lookup(left_half, S0)
+#4x4 matrix provides 2 bit output for 4 bit input
+
+    left_sbox = sbox_lookup(left_half, S0) #SO içinden R ve C bularak bir int buluyorsun sonra binary halini alıyorsun
     right_sbox = sbox_lookup(right_half, S1)
 
     sbox_result = left_sbox + right_sbox
     p4_result = permute(sbox_result, P4)
 
+    #block ilk 4 ile xor sonra son 4 ile birleştir
     return xor(block[:4], p4_result) + block[4:]
 
 def split_into_blocks(data, block_size=8):
@@ -142,7 +146,7 @@ def key_generation(key):
 
     permuted_key = permute(key, P10)
     left, right = permuted_key[:5], permuted_key[5:]
-    left_shifted = left_shift(left, 1) + left_shift(right, 1)
+    left_shifted = left_shift(left, 1) + left_shift(right, 1) #sola 1 kaydırma
     key1 = permute(left_shifted, P8)
     left_shifted = left_shift(left_shift(left, 2), 1) + left_shift(left_shift(right, 2), 1)
     key2 = permute(left_shifted, P8)
@@ -186,6 +190,7 @@ def share_keys_and_encrypt_sdes_key():
     keys = key_generation(s_des_key)
     print(f"\nGenerated S-DES Key: {s_des_key}")
     print(f"S-DES Subkeys: {keys}")
+    #senaryoya uygun olması için oluşan s_des_key ile bob pub ley ile encrypted key oluşturuluyor
     encrypted_key = rsa_encrypt(s_des_key, bob_pub_key)
     decrypted_key = rsa_decrypt(encrypted_key, bob_priv_key)
     print("S-DES Key Encrypted with Bob's Public Key and Sent to Bob.")

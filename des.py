@@ -26,13 +26,17 @@ def sbox_lookup(bits, sbox):
     return format(sbox[row][col], '02b')
 
 
+
+#
 def f_k(block, subkey):
     EP = [3, 0, 1, 2, 1, 2, 3, 0]  #for a 4-bit block
     S0 = [[1, 0, 3, 2], [3, 2, 1, 0], [0, 2, 1, 3], [3, 1, 3, 2]]
     S1 = [[0, 1, 2, 3], [2, 0, 1, 3], [3, 0, 1, 0], [2, 1, 0, 3]]
     P4 = [1, 3, 2, 0]
 
+    # second half EP permute
     expanded_half = permute(block[4:], EP)
+    #  0 xor 0 = 0 1 xor 0 = 1
     xor_result = xor(expanded_half, subkey)
 
     left_half = xor_result[:4]
