@@ -30,7 +30,7 @@ def generate_rsa_keys(bits=2048):
     q = generate_prime(bits // 2)
     n = p * q
     phi = (p - 1) * (q - 1)
-    e = 65537  # Common choice for e
+    e = 65537  # Common choice for e ,
     d = multiplicative_inverse(e, phi)
     return ((e, n), (d, n))
 
